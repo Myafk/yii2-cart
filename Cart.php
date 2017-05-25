@@ -26,7 +26,7 @@ class Cart extends Component
      *
      * @var string|\yii2mod\cart\storage\StorageInterface
      */
-    public $storageClass = '\yii2mod\cart\storage\SessionStorage';
+    public $storageClass = '\yii2mod\cart\storage\SessionStorages';
 
     /**
      * @var array cart items
