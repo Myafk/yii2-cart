@@ -1,13 +1,13 @@
 <?php
 
-namespace yii2mod\cart\storage;
+namespace myafk\cart\storage;
 
-use yii2mod\cart\Cart;
+use myafk\cart\Cart;
 
 /**
  * Interface StorageInterface
  *
- * @package yii2mod\cart\storage
+ * @package myafk\cart\storage
  */
 interface StorageInterface
 {

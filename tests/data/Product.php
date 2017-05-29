@@ -1,6 +1,6 @@
 <?php
 
-namespace yii2mod\cart\tests\data;
+namespace myafk\cart\tests\data;
 
 use yii\db\ActiveRecord;
 use yii2mod\cart\models\CartItemInterface;

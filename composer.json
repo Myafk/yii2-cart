@@ -1,5 +1,5 @@
 {
-    "name": "yii2mod/yii2-cart",
+    "name": "myafk/yii2-cart",
     "description": "Yii2 Shopping cart",
     "type": "yii2-extension",
     "license": "MIT",
@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "yii2mod\\cart\\": ""
+            "myafk\\cart\\": ""
         }
     }
 }

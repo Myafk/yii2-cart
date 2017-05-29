@@ -1,6 +1,6 @@
 <?php
 
-namespace yii2mod\cart\storage;
+namespace myafk\cart\storage;
 
 use Yii;
 use yii\base\InvalidConfigException;

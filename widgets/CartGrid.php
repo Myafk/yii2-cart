@@ -1,6 +1,6 @@
 <?php
 
-namespace yii2mod\cart\widgets;
+namespace myafk\cart\widgets;
 
 use Yii;
 use yii\base\Widget;

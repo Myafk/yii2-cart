@@ -1,6 +1,6 @@
 <?php
 
-namespace yii2mod\cart\models;
+namespace myafk\cart\models;
 
 /**
  * All objects that can be added to the cart must implement this interface

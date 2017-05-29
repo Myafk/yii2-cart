@@ -1,32 +1,42 @@
 <?php
 
-namespace yii2mod\cart;
+namespace myafk\cart;
 
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidParamException;
-use yii2mod\cart\models\CartItemInterface;
-use yii2mod\cart\storage\StorageInterface;
+use yii\helpers\ArrayHelper;
+use myafk\cart\models\CartItemInterface;
+use myafk\cart\storage\StorageInterface;
 
 /**
  * Class Cart provides basic cart functionality (adding, removing, clearing, listing items). You can extend this class and
  * override it in the application configuration to extend/customize the functionality
  *
- * @package yii2mod\cart
+ * @package myafk\cart
+ *
+ * @property StorageInterface[] $storage
  */
 class Cart extends Component
 {
     /**
      * @var string CartItemInterface class name
      */
-    const ITEM_PRODUCT = '\yii2mod\cart\models\CartItemInterface';
+    const ITEM_PRODUCT = '\myafk\cart\models\CartItemInterface';
 
     /**
      * Override this to provide custom (e.g. database) storage for cart data
+     * Можно писать условие, например, тогда это хранилище будет использоваться только для гостей
+     * '\yii2mod\cart\storage\SessionStorage' => [
+     *  'condition' => function() { return Yii::$app->user->isGuest; }
+     * ]
      *
-     * @var string|\yii2mod\cart\storage\StorageInterface
+     * @var array
      */
-    public $storageClass = '\yii2mod\cart\storage\SessionStorages';
+    public $storageClasses = [
+    	'\yii2mod\cart\storage\SessionStorage',
+	    '\yii2mod\cart\storage\DatabaseStorage',
+    ];
 
     /**
      * @var array cart items
@@ -44,24 +54,19 @@ class Cart extends Component
     public function init()
     {
         $this->clear(false);
-        $this->setStorage(Yii::createObject($this->storageClass));
-        $this->items = $this->storage->load($this);
-    }
-
-    /**
-     * Assigns cart to logged in user
-     *
-     * @param string
-     * @param string
-     */
-    public function reassign($sessionId, $userId)
-    {
-        if (get_class($this->getStorage()) === 'yii2mod\cart\storage\DatabaseStorage') {
-            if (!empty($this->items)) {
-                $storage = $this->getStorage();
-                $storage->reassign($sessionId, $userId);
-                self::init();
-            }
+        foreach ($this->storageClasses as $storageClass => $value) {
+        	$condition = true;
+        	$conditionCallback = ArrayHelper::remove($value, 'condition');
+        	if ($conditionCallback && is_callable($conditionCallback))
+        		$condition = call_user_func($conditionCallback, [$this]);
+        	if ($condition)
+	            $this->setStorage(Yii::createObject($storageClass));
+        }
+        foreach($this->storage as $storage) {
+        	if ($data = $storage->load($this)) {
+		        $this->items = $data;
+		        break;
+	        }
         }
     }
 
@@ -93,20 +98,21 @@ class Cart extends Component
      */
     public function setStorage($storage)
     {
-        $this->_storage = $storage;
+        $this->_storage[get_class($storage)] = $storage;
     }
 
     /**
      * Add an item to the cart
      *
      * @param models\CartItemInterface $element
+     * @param integer $quantity
      * @param bool $save
      *
      * @return $this
      */
-    public function add(CartItemInterface $element, $save = true)
+    public function add(CartItemInterface $element, $quantity = 1, $save = true)
     {
-        $this->addItem($element);
+        $this->addItem($element, $quantity);
         $save && $this->storage->save($this);
 
         return $this;
@@ -114,10 +120,12 @@ class Cart extends Component
 
     /**
      * @param \yii2mod\cart\models\CartItemInterface $item
+     * @param integer $quantity
      */
-    protected function addItem(CartItemInterface $item)
+    protected function addItem(CartItemInterface $item, $quantity = 1)
     {
         $uniqueId = $item->getUniqueId();
+        $item['quantity'] = $quantity;
         $this->items[$uniqueId] = $item;
     }
 
@@ -125,19 +133,24 @@ class Cart extends Component
      * Removes an item from the cart
      *
      * @param string $uniqueId
+     * @param integer $quantity Если количество = 0, то удаляем весь итем с корзины, иначе убираем то кол-во, которое указано
      * @param bool $save
      *
      * @throws \yii\base\InvalidParamException
      *
      * @return $this
      */
-    public function remove($uniqueId, $save = true)
+    public function remove($uniqueId, $quantity = 0, $save = true)
     {
         if (!isset($this->items[$uniqueId])) {
             throw new InvalidParamException('Item not found');
         }
-
-        unset($this->items[$uniqueId]);
+        $itemQuantity = $this->items[$uniqueId]['quantity'];
+        $totalQuantity = $itemQuantity - $quantity;
+		if ($quantity === 0 || $totalQuantity <= 0)
+			unset($this->items[$uniqueId]);
+		else
+			$this->items[$uniqueId]['quantity'] = $totalQuantity;
 
         $save && $this->storage->save($this);
 

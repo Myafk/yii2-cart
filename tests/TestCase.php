@@ -1,6 +1,6 @@
 <?php
 
-namespace yii2mod\cart\tests;
+namespace myafk\cart\tests;
 
 use Yii;
 use yii\helpers\ArrayHelper;
